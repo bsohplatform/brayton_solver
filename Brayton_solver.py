@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import CoolProp.CoolProp as CP
 from scipy.optimize import fsolve
 import numpy as np
+import matplotlib.pyplot as plt
 
 @dataclass
 class Fluid_stream:
@@ -42,6 +43,8 @@ class Outputs:
     cold_Q:float = 0.0
     hot_eff:float = 0.0
     cold_eff:float = 0.0
+    T_cold_sec: list = field(default_factory=list)
+    T_hot_sec: list = field(default_factory=list)
 
 @staticmethod
 class Aux:
@@ -221,7 +224,7 @@ class Brayton():
                             first['cold_out'].m = first['cold_in'].m
                             first['hot_in'].m = first['cold_in'].m
                             first['hot_out'].m = first['cold_in'].m
-                            (dT_cold, T_rvs_cold) = self.HX_module(first['cold_in'], first['cold_out'], second['cold_in'], second['cold_out'], settings)
+                            (dT_cold, T_rvs_cold, outputs.T_cold_sec) = self.HX_module(first['cold_in'], first['cold_out'], second['cold_in'], second['cold_out'], settings)
                             
                             if T_rvs_cold == 1:
                                 T_cout_ub = T_cout
@@ -243,7 +246,7 @@ class Brayton():
                             first['hot_out'].m = first['hot_in'].m
                             first['cold_in'].m = first['hot_in'].m
                             first['cold_out'].m = first['hot_in'].m
-                            (dT_hot, T_rvs_hot) = self.HX_module(first['hot_in'], first['hot_out'], second['hot_in'], second['hot_out'], settings)
+                            (dT_hot, T_rvs_hot, outputs.T_hot_sec) = self.HX_module(first['hot_in'], first['hot_out'], second['hot_in'], second['hot_out'], settings)
                             
                             if T_rvs_hot == 1:
                                 T_hout_lb = T_hout
@@ -272,7 +275,7 @@ class Brayton():
                         elif process_case == 2:
                             second['hot_in'].m = second['hot_in'].q/(second['hot_out'].h - second['hot_in'].h)
                         
-                        (dT_hot, T_rvs_hot) = self.HX_module(first['hot_in'], first['hot_out'], second['hot_in'], second['hot_out'], settings)
+                        (dT_hot, T_rvs_hot, outputs.T_hot_sec) = self.HX_module(first['hot_in'], first['hot_out'], second['hot_in'], second['hot_out'], settings)
                         
                         if T_rvs_hot == 1:
                             T_hout_lb = T_hout
@@ -301,7 +304,7 @@ class Brayton():
                             second['cold_in'].m = second['cold_in'].q/(second['cold_out'].h - second['cold_in'].h)
                         
                         first['cold_out'].m = first['cold_in'].m
-                        (dT_cold, T_rvs_cold) = self.HX_module(first['cold_in'], first['cold_out'], second['cold_in'], second['cold_out'], settings)
+                        (dT_cold, T_rvs_cold, outputs.T_cold_sec) = self.HX_module(first['cold_in'], first['cold_out'], second['cold_in'], second['cold_out'], settings)
                         
                         if T_rvs_cold == 1:
                             T_cout_ub = T_cout
@@ -402,8 +405,45 @@ class Brayton():
                 
         T_pp = min(abs(dT))
         
-        return(T_pp, T_rvs)
+        return(T_pp, T_rvs, T_secondary)
     
+    def Plot_diagram(self, first, outputs):
+        
+        key_list = ['cold_out', 'comp_in', 'hot_in', 'hot_out', 'expand_in', 'cold_in', 'cold_out']
+        
+        T_vec = [first[t].T-273.15 for t in key_list]
+        P_vec = [first[p].p/1.0e3 for p in key_list]
+        for s in key_list:
+            first[s].s = CP.PropsSI("S","T",first[s].T, "P", first[s].p, first['cold_out'].fluid)
+        
+        s_vec = [first[s].s/1.0e3 for s in key_list]
+        h_vec = [first[h].h/1.0e3 for h in key_list]
+        
+        T_cold_sec = [t-273.15 for t in outputs.T_cold_sec]
+        T_hot_sec = [t-273.15 for t in outputs.T_hot_sec]
+        s_cold_sec = [(first['cold_in'].s+(first['cold_out'].s - first['cold_in'].s)*s/len(outputs.T_cold_sec))/1.0e3 for s in range(len(outputs.T_cold_sec))]
+        s_hot_sec = [(first['hot_out'].s+(first['hot_in'].s - first['hot_out'].s)*s/len(outputs.T_hot_sec))/1.0e3 for s in range(len(outputs.T_hot_sec))]
+        
+        fig_ph, ax_ph = plt.subplots()
+        ax_ph.plot(h_vec, P_vec, 'ko-')
+        ax_ph.set_xlabel('Enthalpy [kJ/kg]',fontsize = 15)
+        ax_ph.set_ylabel('Pressure [kPa]',fontsize = 15)
+        ax_ph.set_title('Pressure-Enthalpy Diagram (Air)')
+        ax_ph.tick_params(axis = 'x', labelsize = 13)
+        ax_ph.tick_params(axis = 'y', labelsize = 13)
+        
+        fig_ts, ax_ts = plt.subplots()
+        ax_ts.plot(s_vec, T_vec, 'ko-')
+        ax_ts.plot(s_cold_sec, T_cold_sec, 'b', s_hot_sec, T_hot_sec[::-1], 'r')
+        ax_ts.set_xlabel('Entropy [kJ/kg-K]',fontsize = 15)
+        ax_ts.set_ylabel('Temperature [℃]',fontsize = 15)
+        ax_ts.set_title('Temperature-Entropy Diagram (Air)')
+        ax_ts.tick_params(axis = 'x', labelsize = 13)
+        ax_ts.tick_params(axis = 'y', labelsize = 13)
+        
+        fig_ph.savefig('.\Ph_diagram.png',dpi=300)
+        fig_ts.savefig('.\Ts_diagram.png',dpi=300)
+        
     def Post_process(self, first, second, settings, outputs):
         print("COP: %.3f" %(outputs.COP))
         print("Q_hot: %.3f [kW]" %(outputs.hot_Q/1.0e3))
@@ -422,13 +462,13 @@ if __name__ == "__main__":
     
     max_p = 5.0e5
     
-    hot_fluid = 'air'
+    hot_fluid = 'water'
     cold_fluid = 'Water'
     ref_fluid = 'air'
     
     hot_in_T = 350+273.15
     hot_in_p = 18.0e6
-    hot_out_T = 400+273.15
+    hot_out_T = 360+273.15
     hot_out_p = 18.0e6
     hot_m = 1.0
     
@@ -458,4 +498,5 @@ if __name__ == "__main__":
     airHP = Brayton()
     [second, process_case] = airHP.Input_Processing(second)
     airHP.Solver(first, second, settings, outputs, max_p, process_case)
+    airHP.Plot_diagram(first, outputs)
     airHP.Post_process(first, second, settings, outputs)
