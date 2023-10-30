@@ -466,10 +466,10 @@ if __name__ == "__main__":
     cold_fluid = 'Water'
     ref_fluid = 'air'
     
-    hot_in_T = 350+273.15
-    hot_in_p = 18.0e6
-    hot_out_T = 360+273.15
-    hot_out_p = 18.0e6
+    hot_in_T = 500+273.15
+    hot_in_p = 24.6e6
+    hot_out_T = 550+273.15
+    hot_out_p = 24.6e6
     hot_m = 1.0
     
     cold_in_T = 270+273.15
@@ -492,7 +492,7 @@ if __name__ == "__main__":
     first = {'hot_in':hot_in_pri, 'hot_out':hot_out_pri, 'cold_in': cold_in_pri, 'cold_out':cold_out_pri, 'comp_in':comp_in_pri, 'expand_in':expand_in_pri}
     second = {'hot_in':hot_in_sec, 'hot_out':hot_out_sec, 'cold_in':cold_in_sec, 'cold_out':cold_out_sec}
     
-    settings = Settings(hot_dp = 0.01, hot_T_pp=5, cold_dp = 0.01, cold_T_pp = 5.0, ihx_cold_dp = 0.01, ihx_hot_dp = 0.01, ihx_eff = 0.9, comp_eff = 0.75, expand_eff = 0.85, gen_eff=0.99, N_element=30)
+    settings = Settings(hot_dp = 0.01, hot_T_pp=5, cold_dp = 0.01, cold_T_pp = 5.0, ihx_cold_dp = 0.01, ihx_hot_dp = 0.01, ihx_eff = 0.9, comp_eff = 0.75, expand_eff = 0.85, gen_eff=0.98, N_element=30)
     outputs = Outputs()
     
     airHP = Brayton()
