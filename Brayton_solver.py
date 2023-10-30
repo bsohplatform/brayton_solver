@@ -438,6 +438,7 @@ class Brayton():
         ax_ts.set_xlabel('Entropy [kJ/kg-K]',fontsize = 15)
         ax_ts.set_ylabel('Temperature [℃]',fontsize = 15)
         ax_ts.set_title('Temperature-Entropy Diagram (Air)')
+        ax_ts.set_ylim([100, 800])
         ax_ts.tick_params(axis = 'x', labelsize = 13)
         ax_ts.tick_params(axis = 'y', labelsize = 13)
         
@@ -466,14 +467,14 @@ if __name__ == "__main__":
     cold_fluid = 'Water'
     ref_fluid = 'air'
     
-    hot_in_T = 500+273.15
-    hot_in_p = 24.6e6
-    hot_out_T = 550+273.15
-    hot_out_p = 24.6e6
+    hot_in_T = 365+273.15
+    hot_in_p = 20.6e6
+    hot_out_T = 366+273.15
+    hot_out_p = 20.6e6
     hot_m = 1.0
     
-    cold_in_T = 270+273.15
-    cold_out_T = 260+273.15
+    cold_in_T = 264+273.15
+    cold_out_T = 263+273.15
     cold_in_p = 5.0e6
     cold_out_p = 5.0e6
     cold_m = 0.0
