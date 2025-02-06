@@ -442,8 +442,8 @@ class Brayton():
         ax_ts.tick_params(axis = 'x', labelsize = 13)
         ax_ts.tick_params(axis = 'y', labelsize = 13)
         
-        fig_ph.savefig('.\Ph_diagram.png',dpi=300)
-        fig_ts.savefig('.\Ts_diagram.png',dpi=300)
+        fig_ph.savefig('.\\Ph_diagram.png',dpi=300)
+        fig_ts.savefig('.\\Ts_diagram.png',dpi=300)
         
     def Post_process(self, first, second, settings, outputs):
         print("COP: %.3f" %(outputs.COP))
